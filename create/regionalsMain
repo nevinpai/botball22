@@ -1,0 +1,206 @@
+#include "createDrive.h"
+#include <kipr/botball.h>
+#include <kipr/wombat.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
+#define LEFT 0 
+#define RIGHT 1
+#define WRIST 2
+#define CLAW 3
+
+// down left offset by 135, up left is offset by -50
+//PORT 0 HAS TO BE 135 TO START WITH, PORT 1 HAS TO 2047 TO START
+//60 is when PORT 1 HAS TO BE UP
+//2047 IS FOR PORT 0 WHEN ITS ALL THE WAY UP
+
+#define ET 0
+
+//For forearms
+#define VERT 1650
+//#define START 135
+#define START 250
+#define PLACE 2047
+
+//For Claw
+#define CLOSE 2047
+#define OPEN 1250
+
+//For Wrist
+#define GRAB 200
+#define UP 500
+
+
+
+void setup();
+void grabBot();
+void placeBot();
+void slowServo(int port, int position);
+void stopCreate(int ms);
+void turn();
+
+int main() {
+  	
+	//SETS UP THE CREATE FOR THE START OF THE MATCH
+    
+	setup();
+    //dual_servo_position(VERT + 1450, 3);
+    
+    //DRIVES FORWARD UNTIL THE TOUCH SENSOR HITS THE SECOND POLE.
+    calc_dev();
+    
+    int i = 0;
+	while(i < 2) {
+          if(analog(ET) > 1400) {
+               while(analog(ET) > 1400) {
+                msleep(1);
+         	}
+              i++;
+          }
+
+          //printf("%d", i);
+		  create_forward_gyro(-250, 0);
+          msleep(1);
+          
+	}
+  
+  
+    //Moves a little bit back to line up properly with center
+    set_servo_position(CLAW, CLOSE);
+    create_forward_gyro(100, 0);
+    msleep(600);
+                        
+	//Turn towards Botguy(@ the second pole) 
+    create_left(100, 100);
+    
+    //Squaring up towards the center(driving towards center)
+    create_forward_gyro(-200, 0);
+    msleep(2800);
+
+    //Grabbing botguy
+   	grabBot();
+    dual_servo_position(VERT - 1000, 3);
+
+    //Heading towards Transport for sqauring up!
+    create_forward_gyro(200, 0);
+    msleep(1800);
+    create_right(101, 100);
+    create_forward_gyro(-200, 0);
+    msleep(4250);
+    
+    //Heading towards airlock!
+    create_forward_gyro(150, 0);
+    msleep(2000);
+    create_drive_direct(100, -100);
+    msleep(1600);
+    create_forward_gyro(-150, 0);
+    msleep(5000);
+    create_drive_direct(100, 100);
+    msleep(1000);
+    create_left(80, 100);
+   	placeBot();
+    
+    create_drive_direct(50, 50);
+    msleep(1000);
+
+    //Going towards transporter for square up
+    create_right(57, 100);
+    create_forward_gyro(100, 0);
+    msleep(2650);
+    create_drive_direct(-100, 100);
+    msleep(1600);
+    create_drive_direct(-100, -100);
+    msleep(500);
+
+
+    //Turning towards green cube
+    create_drive_direct(75, 75);
+    msleep(1000);
+    create_drive_direct(-100, 100);
+    msleep(1600);
+
+    //Driving towards green cube
+    create_forward_gyro(100, 0);
+    msleep(1500);
+
+    msleep(50);
+    
+    
+    
+    return 0;
+
+
+}
+
+
+void grabBot() { 
+	
+    //Positioning the robot and arm to pick up Botguy
+    create_drive_direct(0, 0);
+    create_left(3, 100);
+    set_servo_position(CLAW, OPEN);
+	dual_servo_position(VERT, 3); 
+	set_servo_position(WRIST, GRAB);
+    msleep(250);
+    
+     //Actually grabbing Botguy
+    create_drive_direct(-50, -50);
+    msleep(250);
+	set_servo_position(CLAW, CLOSE);
+    msleep(500);
+	
+}
+
+
+
+ void placeBot() {
+	
+    
+    dual_servo_position(VERT, 3);
+    create_drive_direct(0, 0);
+	msleep(500);
+    slow_servo_position(500, 3, WRIST);
+    create_drive_direct(0, 0);
+	msleep(500);
+    dual_servo_position(VERT + 1450, 3);
+   	create_drive_direct(0, 0);
+	msleep(500);
+    create_drive_direct(-100, -100);
+    msleep(350);
+    create_drive_direct(0, 0);
+	msleep(500);
+ 	slow_servo_position(OPEN, 3, CLAW);
+ 	msleep(500);
+ 	slow_servo_position(OPEN - 30, 3, CLAW);
+ 	dual_servo_position(VERT, 3);
+
+
+ }
+
+
+void setup() {
+    create_connect();
+
+    //set_create_total_angle(0);
+
+    set_servo_position(WRIST, GRAB);
+    set_servo_position(CLAW, 1200);
+   	
+    enable_servos();
+    
+    dual_servo_position(START, 3);
+
+
+
+    
+    msleep(500);
+
+}
+
+// void stop()
+// {
+//     create_disconnect();
+//     disable_servos();
+//     ao();
+// }
